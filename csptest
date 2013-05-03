@@ -16,6 +16,8 @@ do
 	EXISTING_EXTRACTED_DIR=/tmp/existingextracted
 	CONVERTED_EXTRACTED_DIR=/tmp/convertedextracted
 	
+	rm -f ${FAILED_RESULTS}
+	rm -f ${PASSED_RESULTS}
 	rm -f ${CONVERTED_BUILD_FILENAME}
 	rm -f ${EXISTING_BUILD_FILENAME}
 	rm -rf ${EXISTING_EXTRACTED_DIR}
