@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Loop over each content spec ID
+for CS_ID in `curl --silent 'http://skynet.usersys.redhat.com:8080/TopicIndex/seam/resource/rest/1/topics/get/json/query;tag268=1?expand=%7B%22branches%22%3A%5B%7B%22trunk%22%3A%7B%22name%22%3A%20%22topics%22%7D%7D%5D%7D' | grep -Po '(?<="id":)[0-9]+'` 
+do
+
+  EXISTING_FILENAME=/tmp/existing${CS_ID}
+	UPLOAD_FILENAME=/tmp/new${CS_ID}
+	CONVERTED_FILENAME=/tmp/converted${CS_ID}
+	CONVERTED_DOWNLOAD_FILENAME=/tmp/converteddownload${CS_ID}
+	CONVERTED_BUILD_FILENAME=/tmp/converted${CS_ID}.zip
+	EXISTING_BUILD_FILENAME=/tmp/existing${CS_ID}.zip
+	EXISTING_EXTRACTED_DIR=/tmp/existingextracted
+	CONVERTED_EXTRACTED_DIR=/tmp/convertedextracted
+	
+	rm -f ${CONVERTED_BUILD_FILENAME}
+	rm -f ${EXISTING_BUILD_FILENAME}
+	rm -rf ${EXISTING_EXTRACTED_DIR}
+	rm -rf ${CONVERTED_EXTRACTED_DIR}
+
+	echo Download the existing content spec
+	curl --silent -o ${EXISTING_FILENAME} http://skynet-dev.usersys.redhat.com:8080/TopicIndex/seam/resource/rest/1/topic/get/xml/${CS_ID}/xml
+	sed -i '1,3d' ${EXISTING_FILENAME}
+	
+	echo Copy into new spec, without the first 2 lines
+	cp ${EXISTING_FILENAME} ${UPLOAD_FILENAME}
+	sed -i '1,2d' ${UPLOAD_FILENAME}
+
+	echo Push the existing content spec into the new REST API, and download the result
+	curl --silent -X POST --data-binary @${UPLOAD_FILENAME} -o ${CONVERTED_FILENAME}  --header "Content-Type: text/plain" 'http://skynet-dev.usersys.redhat.com:8080/TopicIndex/seam/resource/rest/1/contentspec/create/text?message=test&flag=1&userId=89'
+	
+	
+	echo Download the content spec are it has been parsed with the new API
+	CONVERTED_ID=$(cat ${CONVERTED_FILENAME} | grep -Po '(?<=Content Specification ID: )[0-9]+(?=$)')
+	curl --silent -o ${CONVERTED_DOWNLOAD_FILENAME} http://skynet-dev.usersys.redhat.com:8080/TopicIndex/seam/resource/rest/1/contentspec/get/text/${CONVERTED_ID}
+	sed -i '1,2d' ${CONVERTED_DOWNLOAD_FILENAME}
+	
+	echo Build the existing content spec
+	csprocessor build --hide-bug-links -o ${EXISTING_BUILD_FILENAME} ${UPLOAD_FILENAME}
+	
+	echo Build the new content spec
+	csprocessor build --hide-bug-links -o ${CONVERTED_BUILD_FILENAME} ${CONVERTED_DOWNLOAD_FILENAME}
+	
+	echo unzipping files
+	unzip -d ${EXISTING_EXTRACTED_DIR} ${EXISTING_BUILD_FILENAME}
+	unzip -d ${CONVERTED_EXTRACTED_DIR} ${CONVERTED_BUILD_FILENAME}
+	
+	echo Compare the results
+	diff ${EXISTING_EXTRACTED_DIR} ${CONVERTED_EXTRACTED_DIR}
+	if [ $? -ne 0 ]
+	then
+	    echo "Spec ${CS_ID} did not convert cleanly"
+	fi
+done
