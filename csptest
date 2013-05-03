@@ -16,6 +16,8 @@ do
 	EXISTING_EXTRACTED_DIR=/tmp/existingextracted
 	CONVERTED_EXTRACTED_DIR=/tmp/convertedextracted
 	
+	rm -f ${FAILED_RESULTS}
+	rm -f ${PASSED_RESULTS}
 	rm -f ${CONVERTED_BUILD_FILENAME}
 	rm -f ${EXISTING_BUILD_FILENAME}
 	rm -rf ${EXISTING_EXTRACTED_DIR}
@@ -39,10 +41,10 @@ do
 	sed -i '1,2d' ${CONVERTED_DOWNLOAD_FILENAME}
 	
 	echo Build the existing content spec
-	csprocessor build --hide-bug-links -o ${EXISTING_BUILD_FILENAME} ${UPLOAD_FILENAME}
+	csprocessor build --permissive --hide-bug-links -o ${EXISTING_BUILD_FILENAME} ${UPLOAD_FILENAME}
 	
 	echo Build the new content spec
-	csprocessor build --hide-bug-links -o ${CONVERTED_BUILD_FILENAME} ${CONVERTED_DOWNLOAD_FILENAME}
+	csprocessor build --permissive --hide-bug-links -o ${CONVERTED_BUILD_FILENAME} ${CONVERTED_DOWNLOAD_FILENAME}
 	
 	echo unzipping files
 	unzip -d ${EXISTING_EXTRACTED_DIR} ${EXISTING_BUILD_FILENAME}
@@ -53,9 +55,9 @@ do
 	if [ $? -ne 0 ]
 	then
 		echo "Spec ${CS_ID} did not convert cleanly"
-	    	echo ${CS_ID} >> FAILED_RESULTS
+	    	echo ${CS_ID} >> ${FAILED_RESULTS}
 	else
 		echo "Spec ${CS_ID} converted cleanly"
-		echo ${CS_ID} >> PASSED_RESULTS
+		echo ${CS_ID} >> ${PASSED_RESULTS}
 	fi
 done
