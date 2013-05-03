@@ -53,9 +53,9 @@ do
 	if [ $? -ne 0 ]
 	then
 		echo "Spec ${CS_ID} did not convert cleanly"
-	    	echo ${CS_ID} >> FAILED_RESULTS
+	    	echo ${CS_ID} >> ${FAILED_RESULTS}
 	else
 		echo "Spec ${CS_ID} converted cleanly"
-		echo ${CS_ID} >> PASSED_RESULTS
+		echo ${CS_ID} >> ${PASSED_RESULTS}
 	fi
 done
