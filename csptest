@@ -39,10 +39,10 @@ do
 	sed -i '1,2d' ${CONVERTED_DOWNLOAD_FILENAME}
 	
 	echo Build the existing content spec
-	csprocessor build --hide-bug-links -o ${EXISTING_BUILD_FILENAME} ${UPLOAD_FILENAME}
+	csprocessor build --permissive --hide-bug-links -o ${EXISTING_BUILD_FILENAME} ${UPLOAD_FILENAME}
 	
 	echo Build the new content spec
-	csprocessor build --hide-bug-links -o ${CONVERTED_BUILD_FILENAME} ${CONVERTED_DOWNLOAD_FILENAME}
+	csprocessor build --permissive --hide-bug-links -o ${CONVERTED_BUILD_FILENAME} ${CONVERTED_DOWNLOAD_FILENAME}
 	
 	echo unzipping files
 	unzip -d ${EXISTING_EXTRACTED_DIR} ${EXISTING_BUILD_FILENAME}
